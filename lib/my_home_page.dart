@@ -72,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
               ElevatedButton(
-                child: const Icon(Icons.share_sharp),
+                child: const Icon(Icons.share_sharp, semanticLabel: 'Other'),
                 onPressed: () async {
                   await Share.share(quote.quote);
                 },
@@ -84,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Random',
-        child: const Icon(Icons.share),
+        child: const Icon(Icons.account_balance_rounded),
       ),
       // This trailing comma makes auto-formatting nicer for build methods.
     );
