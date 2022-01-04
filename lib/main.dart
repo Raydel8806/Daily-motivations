@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'my_home_page.dart';
 
 void main() {
@@ -16,7 +15,7 @@ class MyApp extends StatelessWidget {
       title: 'Motivaciones Diarias',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.red,
+        primarySwatch: Colors.green,
       ),
       home: const MyHomePage(title: 'Motivaciones Diarias'),
     );

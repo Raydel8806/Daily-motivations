@@ -421,7 +421,7 @@ class QuoteProvider {
       Quote(
           'Abril 24',
           'Si no puedes volar, corre, si no puedes correr, camina, si no puedes caminar, gatea. Sin importar lo que hagas, sigue avanzado hacia adelante',
-          'Martin Luther King Jr.        '),
+          'Martin Luther King Jr.'),
       Quote(
           'Abril 25',
           'Regla número 1: nunca pierdas dinero. Regla número 2: nunca olvides la regla número 1',
@@ -1036,7 +1036,8 @@ class QuoteProvider {
           'Fred Shero'),
       Quote(
           'Octubre 9',
-          'Un <a href="https://www.emprendiendohistorias.com/emprendedores-exitosos/">hombre exitoso</a> es aquel capaz de construir fundaciones firmes con los ladrillos que le tiraron otros',
+          'Un hombre exitoso es aquel capaz de construir fundaciones firmes '
+              'con los ladrillos que le tiraron otros',
           'David Brinkley'),
       Quote(
           'Octubre 10',
