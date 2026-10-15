@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'quote.dart';
+import '../models/quote.dart';
 
 class QuoteTranslations {
   static final Map<String, Map<String, String>> _catalogs = {};

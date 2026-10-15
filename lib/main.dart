@@ -1,40 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'app_strings.dart';
-import 'quote_translations.dart';
-import 'my_home_page.dart';
+import 'app/app.dart';
+import 'features/quotes/data/quote_translations.dart';
+import 'features/settings/data/language_preferences.dart';
+import 'features/favorites/data/favorites_store.dart';
+import 'features/reminders/data/daily_reminder_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await QuoteTranslations.load();
-  runApp(const MyApp());
-}
-
-class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  Locale? _locale;
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      onGenerateTitle: (context) => AppStrings.of(context).title,
-      locale: _locale,
-      supportedLocales: const [Locale('es'), Locale('en'), Locale('fr')],
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: MyHomePage(onLanguageChanged: (locale) {
-        setState(() => _locale = locale);
-      }),
-    );
+  final preferences = LanguagePreferences();
+  Locale? savedLocale;
+  try {
+    savedLocale = await preferences.load();
+  } catch (error) {
+    debugPrint('Could not load the language preference: $error');
   }
+  final favorites = FavoritesStore();
+  try {
+    await favorites.load();
+  } catch (error) {
+    debugPrint('Could not load favorites: $error');
+  }
+  final reminders = DailyReminderService();
+  try {
+    await reminders.initialize(savedLocale?.languageCode);
+  } catch (error) {
+    debugPrint('Could not initialize reminders: $error');
+  }
+  runApp(DailyMotivationsApp(
+      reminderService: reminders,
+      favoritesStore: favorites,
+      initialLocale: savedLocale,
+      onLanguageSaved: preferences.save));
 }

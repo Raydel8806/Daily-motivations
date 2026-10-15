@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:motivaciones_diarias/main.dart';
-import 'package:motivaciones_diarias/app_strings.dart';
-import 'package:motivaciones_diarias/quote_provider.dart';
-import 'package:motivaciones_diarias/quote_translations.dart';
+import 'package:motivaciones_diarias/app/app.dart';
+import 'package:motivaciones_diarias/core/localization/app_strings.dart';
+import 'package:motivaciones_diarias/features/quotes/data/quote_catalog.dart';
+import 'package:motivaciones_diarias/features/quotes/data/quote_translations.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +13,7 @@ void main() {
   test('Every calendar date has an offline English and French translation',
       () async {
     await QuoteTranslations.load();
-    final quotes = QuoteProvider().listOfQuotes;
+    final quotes = QuoteCatalog().quotes;
     expect(quotes.length, 366);
     expect(quotes.map((quote) => quote.date).toSet().length, 366);
     for (final quote in quotes) {
@@ -40,7 +40,7 @@ void main() {
     expect(AppStrings('en').date('Febrero 29'), 'February 29');
     expect(AppStrings('fr').date('Febrero 29'), '29 février');
     expect(AppStrings('es').date('Febrero 29'), '29 de febrero');
-    final proverb = QuoteProvider().getQuoteByDay('Febrero 27');
+    final proverb = QuoteCatalog().forDate(DateTime(2024, 2, 27));
     expect(QuoteTranslations.author(proverb, 'en'), 'Japanese proverb');
     expect(QuoteTranslations.author(proverb, 'fr'), 'Proverbe japonais');
   });
@@ -50,26 +50,11 @@ void main() {
     tester.binding.platformDispatcher.localesTestValue = const [Locale('es')];
     addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
     await tester.runAsync(QuoteTranslations.load);
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const DailyMotivationsApp());
     await tester.pumpAndSettle();
     expect(find.text('Motivaciones Diarias'), findsOneWidget);
     final now = DateTime.now();
-    const months = [
-      'Enero',
-      'Febrero',
-      'Marzo',
-      'Abril',
-      'Mayo',
-      'Junio',
-      'Julio',
-      'Agosto',
-      'Septiembre',
-      'Octubre',
-      'Noviembre',
-      'Diciembre'
-    ];
-    final quote =
-        QuoteProvider().getQuoteByDay('${months[now.month - 1]} ${now.day}');
+    final quote = QuoteCatalog().forDate(now);
     for (final entry in {
       'English': ['en', 'Daily Motivations'],
       'Français': ['fr', 'Motivations quotidiennes'],

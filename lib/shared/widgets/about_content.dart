@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'app_strings.dart';
+import '../../core/localization/app_strings.dart';
 
-class AboutApp extends StatelessWidget {
-  const AboutApp({Key? key}) : super(key: key);
+class AboutContent extends StatelessWidget {
+  const AboutContent({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,9 @@ class AboutApp extends StatelessWidget {
       const SizedBox(height: 10),
       Text('${AppStrings.of(context).version}: 1.0.0'),
       const SizedBox(height: 10),
-      Text('${AppStrings.of(context).author}: Raydel Raúl Viñolo Sosa'),
+      Text('${AppStrings.of(context).author}: Ing. Raydel Raúl Viñolo Sosa'),
+      SelectableText(
+          '${AppStrings.of(context).contact}: raydel8806dev@gmail.com'),
     ]);
   }
 }

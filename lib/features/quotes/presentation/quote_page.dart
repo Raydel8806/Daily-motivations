@@ -1,0 +1,359 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:motivaciones_diarias/features/quotes/models/quote.dart';
+import 'package:motivaciones_diarias/features/quotes/data/quote_catalog.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../core/localization/app_strings.dart';
+import '../../../shared/widgets/about_content.dart';
+import '../data/quote_translations.dart';
+import '../../favorites/data/favorites_store.dart';
+import '../../favorites/presentation/favorites_page.dart';
+import '../../reminders/data/daily_reminder_service.dart';
+import '../../reminders/presentation/reminder_settings_page.dart';
+import 'dart:async';
+
+class QuotePage extends StatefulWidget {
+  const QuotePage(
+      {Key? key,
+      required this.onLanguageChanged,
+      required this.favoritesStore,
+      this.reminderService,
+      this.selectedLocale})
+      : super(key: key);
+  final ValueChanged<Locale?> onLanguageChanged;
+  final Locale? selectedLocale;
+  final FavoritesStore favoritesStore;
+  final DailyReminderService? reminderService;
+
+  @override
+  State<QuotePage> createState() => _QuotePageState();
+}
+
+class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
+  bool _datePickerVisible = false;
+
+  final _catalog = QuoteCatalog();
+  late Quote _quote;
+  bool _savingFavorite = false;
+  bool _showingToday = true;
+  Timer? _midnightTimer;
+
+  Future<void> _toggleFavorite() async {
+    setState(() => _savingFavorite = true);
+    try {
+      await widget.favoritesStore.toggle(_quote);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.of(context).favoritesError)),
+        );
+      }
+    }
+    if (mounted) setState(() => _savingFavorite = false);
+  }
+
+  Future<void> _openFavorites() async {
+    final selected = await Navigator.push<Quote>(
+        context,
+        MaterialPageRoute(
+            builder: (_) => FavoritesPage(store: widget.favoritesStore)));
+    if (selected != null && mounted) {
+      setState(() {
+        _quote = selected;
+        _showingToday = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _quote = _catalog.forDate(DateTime.now());
+    WidgetsBinding.instance.addObserver(this);
+    final opened = widget.reminderService?.openedDate.value;
+    if (opened != null) {
+      _quote = _catalog.forDate(opened);
+      _showingToday = false;
+      widget.reminderService?.openedDate.value = null;
+    }
+    widget.reminderService?.openedDate.addListener(_handleNotificationOpen);
+    _scheduleDayRefresh();
+  }
+
+  void _scheduleDayRefresh() {
+    _midnightTimer?.cancel();
+    final now = DateTime.now();
+    final next = DateTime(now.year, now.month, now.day + 1);
+    _midnightTimer = Timer(next.difference(now), () {
+      if (!mounted) return;
+      if (_showingToday) {
+        setState(() => _quote = _catalog.forDate(DateTime.now()));
+      }
+      _scheduleDayRefresh();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (_showingToday) {
+        setState(() => _quote = _catalog.forDate(DateTime.now()));
+      }
+      _scheduleDayRefresh();
+    }
+  }
+
+  void _handleNotificationOpen() {
+    final date = widget.reminderService?.openedDate.value;
+    if (date == null || !mounted) return;
+    widget.reminderService?.openedDate.value = null;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    setState(() {
+      _quote = _catalog.forDate(date);
+      _showingToday = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _midnightTimer?.cancel();
+    widget.reminderService?.openedDate.removeListener(_handleNotificationOpen);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void _getRandomQuote() {
+    setState(() {
+      _quote = _catalog.randomQuote();
+      _showingToday = false;
+    });
+  }
+
+  void _setDatePickerVisible(bool visibilityDatePicker) {
+    setState(() {
+      _datePickerVisible = visibilityDatePicker;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: _buildAppBar(context),
+      body: CustomScrollView(slivers: <Widget>[
+        SliverToBoxAdapter(
+            child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildBody(),
+          ],
+        )),
+      ]),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _getRandomQuote,
+        tooltip: AppStrings.of(context).random,
+        child: const Icon(Icons.account_balance_rounded),
+      ),
+      // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  Widget _buildDatePickerOrLabel() {
+    if (_datePickerVisible) {
+      return Container(
+        margin: const EdgeInsets.all(20),
+        child: OutlinedButton.icon(
+          icon: const Icon(Icons.event_note),
+          label: Text(AppStrings.of(context).dailyQuote),
+          onPressed: () async {
+            final date = await showDatePicker(
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(1900),
+              lastDate: DateTime(2100, 12, 31),
+            );
+            if (date != null && mounted) _selectDate(date);
+          },
+        ),
+      );
+    } else {
+      return Container(
+          margin: const EdgeInsets.all(20),
+          child: Text(
+            AppStrings.of(context).date(_quote.date),
+            style: const TextStyle(fontSize: 20),
+          ));
+    }
+  }
+
+  void _selectDate(DateTime value) {
+    setState(() {
+      _datePickerVisible = false;
+      _quote = _catalog.forDate(value);
+      _showingToday = false;
+    });
+  }
+
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      title: Text(AppStrings.of(context).title),
+      actions: [
+        IconButton(
+          tooltip: AppStrings.of(context).favorites,
+          icon: const Icon(Icons.favorite_border),
+          onPressed: _openFavorites,
+        ),
+        PopupMenuButton<String>(
+          tooltip: AppStrings.of(context).languageLabel,
+          icon: const Icon(Icons.language),
+          initialValue: widget.selectedLocale?.languageCode ?? 'system',
+          onSelected: (language) => widget.onLanguageChanged(
+              language == 'system' ? null : Locale(language)),
+          itemBuilder: (_) => [
+            PopupMenuItem(
+              value: 'system',
+              child: Text(AppStrings.of(context).deviceLanguage),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(value: 'es', child: Text('Español')),
+            const PopupMenuItem(value: 'en', child: Text('English')),
+            const PopupMenuItem(value: 'fr', child: Text('Français')),
+          ],
+        ),
+        PopupMenuButton(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (value) {},
+          itemBuilder: (BuildContext contex) => <PopupMenuEntry>[
+            if (widget.reminderService?.isSupported == true)
+              PopupMenuItem(
+                onTap: () => Future<void>.delayed(Duration.zero, () {
+                  if (!mounted) return;
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => ReminderSettingsPage(
+                              service: widget.reminderService!)));
+                }),
+                child: ListTile(
+                  leading: const Icon(Icons.notifications_outlined),
+                  title: Text(AppStrings.of(context).dailyReminder),
+                ),
+              ),
+            PopupMenuItem(
+              onTap: () {
+                _getRandomQuote();
+              },
+              child: ListTile(
+                leading: const Icon(Icons.account_balance_rounded),
+                title: Text(AppStrings.of(context).newQuote),
+              ),
+            ),
+            PopupMenuItem(
+              onTap: () async {
+                await _shareQuote();
+              },
+              child: ListTile(
+                leading: const Icon(Icons.share),
+                title: Text(AppStrings.of(context).share),
+              ),
+            ),
+            PopupMenuItem(
+              onTap: () {
+                _setDatePickerVisible(true);
+              },
+              child: ListTile(
+                leading: const Icon(Icons.search),
+                title: Text(AppStrings.of(context).search),
+              ),
+            ),
+            const PopupMenuDivider(),
+            PopupMenuItem(
+              child: ListTile(
+                  leading: const Icon(Icons.info),
+                  title: Text(AppStrings.of(context).about),
+                  onTap: () {
+                    _showAbout(context);
+                  }),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> _shareQuote() async {
+    final language = Localizations.localeOf(context).languageCode;
+    final text = QuoteTranslations.shareText(_quote, language);
+    if (kDebugMode) {
+      print(text);
+    }
+    await SharePlus.instance.share(
+      ShareParams(text: text),
+    );
+  }
+
+  void _showAbout(BuildContext context) {
+    Future.delayed(
+      const Duration(seconds: 0),
+      () => showAboutDialog(
+        context: context,
+        children: const <Widget>[AboutContent()],
+      ),
+    );
+  }
+
+  Container _buildBody() {
+    return Container(
+      margin: const EdgeInsets.all(30),
+      child: Column(
+        children: <Widget>[
+          _buildDatePickerOrLabel(),
+          SelectableText(
+            QuoteTranslations.displayText(
+                _quote, Localizations.localeOf(context).languageCode),
+            style: const TextStyle(
+              fontStyle: FontStyle.italic,
+              fontSize: 24,
+            ),
+            textAlign: TextAlign.justify,
+          ),
+          Container(
+            margin: const EdgeInsets.all(20),
+            alignment: AlignmentGeometry.lerp(
+                Alignment.bottomCenter, Alignment.bottomRight, 1),
+            child: Text(
+              QuoteTranslations.author(
+                  _quote, Localizations.localeOf(context).languageCode),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedBuilder(
+                animation: widget.favoritesStore,
+                builder: (context, _) => IconButton(
+                  key: const ValueKey('toggle_favorite'),
+                  tooltip: widget.favoritesStore.contains(_quote)
+                      ? AppStrings.of(context).removeFavorite
+                      : AppStrings.of(context).addFavorite,
+                  icon: Icon(widget.favoritesStore.contains(_quote)
+                      ? Icons.favorite
+                      : Icons.favorite_border),
+                  onPressed: _savingFavorite ? null : _toggleFavorite,
+                ),
+              ),
+              ElevatedButton(
+                child: Icon(Icons.share_sharp,
+                    semanticLabel: AppStrings.of(context).share),
+                onPressed: _shareQuote,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
