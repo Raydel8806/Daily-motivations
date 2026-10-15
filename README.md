@@ -1,33 +1,33 @@
 # Daily Motivations
 
-Aplicación Flutter con una frase motivacional para cada día del año.
+A Flutter app with a motivational quote for every day of the year.
 
-## Idiomas
+## Languages
 
-La interfaz, el calendario, las fechas y las 366 frases están disponibles en
-español, inglés y francés. Al iniciar se utiliza el idioma del dispositivo;
-para idiomas no compatibles se utiliza español. El icono de idioma en la
-barra superior permite cambiar el idioma durante la sesión conservando la
-frase seleccionada. La selección manual se restablece al reiniciar la app.
+The interface, calendar, dates, and all 366 quotes are available in Spanish,
+English, and French. The app starts in the device language and falls back to
+Spanish for unsupported languages. The language icon in the app bar lets users
+switch languages during a session while keeping the selected quote. A manual
+language selection resets when the app restarts.
 
-Las traducciones de las frases se incluyen en `assets/quotes_en.json` y
-`assets/quotes_fr.json`; leer y compartir frases no requiere conexión.
-Estas traducciones se generaron inicialmente de forma automática y después se
-revisaron las 366 entradas completas en español, inglés y francés con asistencia
-de IA: significado, concordancia, naturalidad, tratamiento y puntuación. Se
-corrigieron también errores ortográficos en nombres y se añadieron sus formas
-convencionales en cada idioma cuando corresponde.
+Quote translations are bundled in `assets/quotes_en.json` and
+`assets/quotes_fr.json`. Reading and sharing quotes does not require a network
+connection. The translations were initially generated automatically, then all
+366 entries were reviewed in Spanish, English, and French with AI assistance
+for meaning, agreement, fluency, forms of address, and punctuation. Author name
+spellings were corrected, and conventional localized forms were added where
+appropriate.
 
-El registro completo de cambios está en `docs/linguistic_review.json`, y el
-informe de criterios y alcance, en `docs/revision_linguistica.md`. Esta revisión
-no es una certificación de un traductor humano ni una verificación histórica
-de todas las citas y sus atribuciones.
+The full change record is in `docs/linguistic_review.json`. The review criteria
+and scope are described in `docs/linguistic_review.md`. This review is neither
+certification by a human translator nor historical verification of every quote
+and its attribution.
 
-`lib/app_strings.dart` contiene los textos de la interfaz. Los catálogos usan
-la fecha española original como identificador estable para no cambiar la
-relación entre cada frase y su día, incluido el 29 de febrero.
+`lib/app_strings.dart` contains the interface text. Catalogs use the original
+Spanish date as a stable identifier to preserve the link between each quote and
+its day, including February 29.
 
-## Desarrollo
+## Development
 
 ```sh
 flutter pub get
@@ -36,13 +36,13 @@ flutter test
 flutter run
 ```
 
-Las pruebas verifican la cobertura de las 366 fechas en ambos catálogos,
-el texto para compartir, el cambio de idioma y la localización del calendario.
+Tests verify coverage of all 366 dates in both translation catalogs, sharing
+text, language switching, and calendar localization.
 
-`dart run tool/translate_quotes.dart` es un importador de desarrollo que requiere
-conexión y consulta un servicio externo de traducción. Conserva las entradas
-existentes, incluidas las correcciones manuales; la aplicación no utiliza este
-servicio durante su ejecución.
+`dart run tool/translate_quotes.dart` is a development importer that requires a
+network connection and queries an external translation service. It preserves
+existing entries, including manual corrections. The app does not use this
+service at runtime.
 
-`dart run tool/translate_quotes.dart --check` comprueba la correspondencia de
-las 366 fechas en ambos catálogos sin conexión ni modificaciones.
+`dart run tool/translate_quotes.dart --check` validates that all 366 dates match
+both catalogs without network access or file changes.
