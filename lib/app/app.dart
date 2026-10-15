@@ -6,6 +6,7 @@ import '../features/quotes/presentation/quote_page.dart';
 import '../features/favorites/data/favorites_store.dart';
 import '../features/reminders/data/daily_reminder_service.dart';
 import '../features/reading/data/quote_speaker.dart';
+import 'app_theme.dart';
 
 class DailyMotivationsApp extends StatefulWidget {
   const DailyMotivationsApp(
@@ -92,9 +93,7 @@ class _DailyMotivationsAppState extends State<DailyMotivationsApp> {
       scaffoldMessengerKey: _messengerKey,
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
+      theme: buildAppTheme(),
       home: QuotePage(
         speaker: widget.quoteSpeaker,
         reminderService: widget.reminderService,

@@ -2,6 +2,11 @@
 
 A Flutter app with a motivational quote for every day of the year.
 
+The reading screen uses a warm neutral background, a green accent, and a
+centered card with readable, left-aligned type. Long quotes and large system
+text sizes scroll naturally; the content width is capped on wider screens.
+Playback, favorites, and sharing stay together beneath the author.
+
 ## Languages
 
 The interface, calendar, dates, and all 366 quotes are available in Spanish,
@@ -71,10 +76,10 @@ is Android-only; the option is hidden on other platforms.
 Android unit tests cover calendar boundaries, leap day, and daylight-saving
 changes. An instrumentation test verifies notification delivery directly from
 the receiver without starting the Flutter activity, duplicate suppression, and
-cancellation. Grant the test app's notification permission before running it:
+cancellation. Run on a test emulator: the instrumentation test grants
+notification permission when needed and restores the saved reminder settings:
 
 ```sh
-adb shell pm grant com.campingstudio.motivaciones_diarias android.permission.POST_NOTIFICATIONS
 cd android
 ./gradlew :app:testDebugUnitTest :app:connectedDebugAndroidTest
 ```

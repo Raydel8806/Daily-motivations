@@ -67,44 +67,52 @@ class _FavoritesPageState extends State<FavoritesPage> {
                       );
                     }
                     return ListView.separated(
+                      padding: const EdgeInsets.all(20),
                       itemCount: quotes.length,
-                      separatorBuilder: (_, __) => const Divider(),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final quote = quotes[index];
-                        return ListTile(
-                          title: Text(
-                              QuoteTranslations.displayText(quote, language),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis),
-                          subtitle: Text(
-                              '${QuoteTranslations.author(quote, language)}\n${strings.date(quote.date)}'),
-                          isThreeLine: true,
-                          onTap: () => Navigator.pop(context, quote),
-                          trailing: IconButton(
-                            tooltip: strings.removeFavorite,
-                            icon: const Icon(Icons.favorite),
-                            onPressed: _saving
-                                ? null
-                                : () async {
-                                    setState(() => _saving = true);
-                                    try {
-                                      await widget.store.toggle(quote);
-                                    } catch (_) {
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                              content:
-                                                  Text(strings.favoritesError)),
-                                        );
-                                      }
-                                    }
-                                    if (mounted) {
-                                      setState(() => _saving = false);
-                                    }
-                                  },
-                          ),
-                        );
+                        return Material(
+                            color: Theme.of(context).colorScheme.surface,
+                            borderRadius: BorderRadius.circular(20),
+                            clipBehavior: Clip.antiAlias,
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
+                              title: Text(
+                                  QuoteTranslations.displayText(
+                                      quote, language),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis),
+                              subtitle: Text(
+                                  '${QuoteTranslations.author(quote, language)}\n${strings.date(quote.date)}'),
+                              isThreeLine: true,
+                              onTap: () => Navigator.pop(context, quote),
+                              trailing: IconButton(
+                                tooltip: strings.removeFavorite,
+                                icon: const Icon(Icons.favorite),
+                                onPressed: _saving
+                                    ? null
+                                    : () async {
+                                        setState(() => _saving = true);
+                                        try {
+                                          await widget.store.toggle(quote);
+                                        } catch (_) {
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(
+                                                      strings.favoritesError)),
+                                            );
+                                          }
+                                        }
+                                        if (mounted) {
+                                          setState(() => _saving = false);
+                                        }
+                                      },
+                              ),
+                            ));
                       },
                     );
                   },

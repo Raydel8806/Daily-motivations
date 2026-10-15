@@ -199,21 +199,38 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: CustomScrollView(slivers: <Widget>[
-        SliverToBoxAdapter(
-            child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildBody(),
-          ],
-        )),
-      ]),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _getRandomQuote,
-        tooltip: AppStrings.of(context).random,
-        child: const Icon(Icons.account_balance_rounded),
+      body: SafeArea(
+        top: false,
+        child: LayoutBuilder(builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                  minHeight:
+                      (constraints.maxHeight - 56).clamp(0, double.infinity)),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildDatePickerOrLabel(),
+                      const SizedBox(height: 24),
+                      _buildBody(),
+                      const SizedBox(height: 28),
+                      FilledButton.icon(
+                        onPressed: _getRandomQuote,
+                        icon: const Icon(Icons.shuffle_rounded),
+                        label: Text(AppStrings.of(context).newQuote),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
       ),
-      // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
@@ -236,12 +253,23 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
         ),
       );
     } else {
-      return Container(
-          margin: const EdgeInsets.all(20),
-          child: Text(
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.calendar_today_outlined,
+              size: 16, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 10),
+          Flexible(
+              child: Text(
             AppStrings.of(context).date(_quote.date),
-            style: const TextStyle(fontSize: 20),
-          ));
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary),
+          )),
+        ],
+      );
     }
   }
 
@@ -305,7 +333,7 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
                 _getRandomQuote();
               },
               child: ListTile(
-                leading: const Icon(Icons.account_balance_rounded),
+                leading: const Icon(Icons.shuffle_rounded),
                 title: Text(AppStrings.of(context).newQuote),
               ),
             ),
@@ -363,36 +391,57 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
     );
   }
 
-  Container _buildBody() {
+  Widget _buildBody() {
+    final colors = Theme.of(context).colorScheme;
     return Container(
-      margin: const EdgeInsets.all(30),
+      key: const ValueKey('quote_card'),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(28, 28, 28, 20),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.12)),
+        boxShadow: [
+          BoxShadow(
+              color: colors.primary.withValues(alpha: 0.05),
+              blurRadius: 24,
+              offset: const Offset(0, 8))
+        ],
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          _buildDatePickerOrLabel(),
+          Icon(Icons.format_quote_rounded, size: 40, color: colors.primary),
+          const SizedBox(height: 16),
           SelectableText(
             QuoteTranslations.displayText(
                 _quote, Localizations.localeOf(context).languageCode),
-            style: const TextStyle(
-              fontStyle: FontStyle.italic,
-              fontSize: 24,
+            style: TextStyle(
+              fontFamily: 'serif',
+              fontSize: 26,
+              height: 1.45,
+              color: colors.onSurface,
             ),
-            textAlign: TextAlign.justify,
+            textAlign: TextAlign.start,
           ),
           Container(
-            margin: const EdgeInsets.all(20),
-            alignment: AlignmentGeometry.lerp(
-                Alignment.bottomCenter, Alignment.bottomRight, 1),
+            margin: const EdgeInsets.only(top: 24, bottom: 24),
+            alignment: Alignment.centerRight,
             child: Text(
               QuoteTranslations.author(
                   _quote, Localizations.localeOf(context).languageCode),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: 15,
               ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Divider(color: colors.primary.withValues(alpha: 0.12)),
+          const SizedBox(height: 8),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 16,
+            runSpacing: 8,
             children: [
               if (_speaker.isSupported)
                 AnimatedBuilder(
@@ -426,9 +475,9 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
                   onPressed: _savingFavorite ? null : _toggleFavorite,
                 ),
               ),
-              ElevatedButton(
-                child: Icon(Icons.share_sharp,
-                    semanticLabel: AppStrings.of(context).share),
+              IconButton(
+                tooltip: AppStrings.of(context).share,
+                icon: const Icon(Icons.ios_share_rounded),
                 onPressed: _shareQuote,
               ),
             ],
