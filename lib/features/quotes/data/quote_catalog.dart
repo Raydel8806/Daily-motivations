@@ -1363,6 +1363,13 @@ class QuoteCatalog {
     return quotes.firstWhere((quote) => quote.date == dayKey);
   }
 
+  Quote? findByKey(String key) {
+    for (final quote in quotes) {
+      if (quote.date == key) return quote;
+    }
+    return null;
+  }
+
   Quote randomQuote() {
     return quotes.elementAt(Random().nextInt(quotes.length));
   }

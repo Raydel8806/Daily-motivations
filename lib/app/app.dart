@@ -3,14 +3,16 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import '../core/localization/app_strings.dart';
 import '../features/settings/data/language_preferences.dart';
 import '../features/quotes/presentation/quote_page.dart';
+import '../features/favorites/data/favorites_store.dart';
 
 class DailyMotivationsApp extends StatefulWidget {
   const DailyMotivationsApp(
-      {Key? key, this.initialLocale, this.onLanguageSaved})
+      {Key? key, this.initialLocale, this.onLanguageSaved, this.favoritesStore})
       : super(key: key);
 
   final Locale? initialLocale;
   final Future<void> Function(Locale?)? onLanguageSaved;
+  final FavoritesStore? favoritesStore;
 
   @override
   State<DailyMotivationsApp> createState() => _DailyMotivationsAppState();
@@ -19,11 +21,19 @@ class DailyMotivationsApp extends StatefulWidget {
 class _DailyMotivationsAppState extends State<DailyMotivationsApp> {
   Locale? _locale;
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
+  late final FavoritesStore _favorites;
 
   @override
   void initState() {
     super.initState();
     _locale = widget.initialLocale;
+    _favorites = widget.favoritesStore ?? FavoritesStore();
+  }
+
+  @override
+  void dispose() {
+    if (widget.favoritesStore == null) _favorites.dispose();
+    super.dispose();
   }
 
   Future<void> _changeLanguage(Locale? locale) async {
@@ -59,6 +69,7 @@ class _DailyMotivationsAppState extends State<DailyMotivationsApp> {
         primarySwatch: Colors.green,
       ),
       home: QuotePage(
+        favoritesStore: _favorites,
         selectedLocale: _locale,
         onLanguageChanged: _changeLanguage,
       ),

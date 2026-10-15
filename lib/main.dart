@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'app/app.dart';
 import 'features/quotes/data/quote_translations.dart';
 import 'features/settings/data/language_preferences.dart';
+import 'features/favorites/data/favorites_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,14 @@ Future<void> main() async {
   } catch (error) {
     debugPrint('Could not load the language preference: $error');
   }
+  final favorites = FavoritesStore();
+  try {
+    await favorites.load();
+  } catch (error) {
+    debugPrint('Could not load favorites: $error');
+  }
   runApp(DailyMotivationsApp(
-      initialLocale: savedLocale, onLanguageSaved: preferences.save));
+      favoritesStore: favorites,
+      initialLocale: savedLocale,
+      onLanguageSaved: preferences.save));
 }

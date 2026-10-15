@@ -6,13 +6,19 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared/widgets/about_content.dart';
 import '../data/quote_translations.dart';
+import '../../favorites/data/favorites_store.dart';
+import '../../favorites/presentation/favorites_page.dart';
 
 class QuotePage extends StatefulWidget {
   const QuotePage(
-      {Key? key, required this.onLanguageChanged, this.selectedLocale})
+      {Key? key,
+      required this.onLanguageChanged,
+      required this.favoritesStore,
+      this.selectedLocale})
       : super(key: key);
   final ValueChanged<Locale?> onLanguageChanged;
   final Locale? selectedLocale;
+  final FavoritesStore favoritesStore;
 
   @override
   State<QuotePage> createState() => _QuotePageState();
@@ -23,6 +29,31 @@ class _QuotePageState extends State<QuotePage> {
 
   final _catalog = QuoteCatalog();
   late Quote _quote;
+  bool _savingFavorite = false;
+
+  Future<void> _toggleFavorite() async {
+    setState(() => _savingFavorite = true);
+    try {
+      await widget.favoritesStore.toggle(_quote);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.of(context).favoritesError)),
+        );
+      }
+    }
+    if (mounted) setState(() => _savingFavorite = false);
+  }
+
+  Future<void> _openFavorites() async {
+    final selected = await Navigator.push<Quote>(
+        context,
+        MaterialPageRoute(
+            builder: (_) => FavoritesPage(store: widget.favoritesStore)));
+    if (selected != null && mounted) {
+      setState(() => _quote = selected);
+    }
+  }
 
   @override
   void initState() {
@@ -103,6 +134,11 @@ class _QuotePageState extends State<QuotePage> {
     return AppBar(
       title: Text(AppStrings.of(context).title),
       actions: [
+        IconButton(
+          tooltip: AppStrings.of(context).favorites,
+          icon: const Icon(Icons.favorite_border),
+          onPressed: _openFavorites,
+        ),
         PopupMenuButton<String>(
           tooltip: AppStrings.of(context).languageLabel,
           icon: const Icon(Icons.language),
@@ -215,12 +251,28 @@ class _QuotePageState extends State<QuotePage> {
               ),
             ),
           ),
-          ElevatedButton(
-            child: Icon(Icons.share_sharp,
-                semanticLabel: AppStrings.of(context).share),
-            onPressed: () async {
-              await _shareQuote();
-            },
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedBuilder(
+                animation: widget.favoritesStore,
+                builder: (context, _) => IconButton(
+                  key: const ValueKey('toggle_favorite'),
+                  tooltip: widget.favoritesStore.contains(_quote)
+                      ? AppStrings.of(context).removeFavorite
+                      : AppStrings.of(context).addFavorite,
+                  icon: Icon(widget.favoritesStore.contains(_quote)
+                      ? Icons.favorite
+                      : Icons.favorite_border),
+                  onPressed: _savingFavorite ? null : _toggleFavorite,
+                ),
+              ),
+              ElevatedButton(
+                child: Icon(Icons.share_sharp,
+                    semanticLabel: AppStrings.of(context).share),
+                onPressed: _shareQuote,
+              ),
+            ],
           ),
         ],
       ),

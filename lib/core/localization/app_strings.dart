@@ -29,6 +29,20 @@ class AppStrings {
   String get author => _text('Autor', 'Author', 'Auteur');
   String get contact => _text('Contacto', 'Contact', 'Contact');
   String get version => _text('Versión', 'Version', 'Version');
+  String get favorites => _text('Favoritos', 'Favorites', 'Favoris');
+  String get addFavorite =>
+      _text('Añadir a favoritos', 'Add to favorites', 'Ajouter aux favoris');
+  String get removeFavorite => _text(
+      'Quitar de favoritos', 'Remove from favorites', 'Retirer des favoris');
+  String get noFavorites => _text(
+      'Aún no tienes favoritos. Guarda una frase con el corazón.',
+      'No favorites yet. Save a quote using the heart.',
+      'Aucun favori pour le moment. Enregistrez une citation avec le cœur.');
+  String get favoritesError => _text(
+      'No se pudieron guardar o cargar los favoritos. Inténtalo de nuevo.',
+      'Could not save or load favorites. Please try again.',
+      'Impossible d’enregistrer ou de charger les favoris. Veuillez réessayer.');
+  String get retry => _text('Reintentar', 'Retry', 'Réessayer');
 
   String _text(String es, String en, String fr) => language == 'en'
       ? en

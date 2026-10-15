@@ -35,6 +35,16 @@ between each quote and its day, including February 29.
 
 ## Project Structure
 
+## Favorites
+
+Use the heart below a quote to add or remove it from favorites. The heart in
+the app bar opens the saved list. Tap a saved quote to open it on the main
+screen. Favorites are stored locally using stable calendar identifiers, so
+changing languages preserves the same saved quotes. The list survives app
+restarts and does not require a network connection.
+
+## Source Organization
+
 ```text
 lib/
   main.dart                      # Startup and local preference loading
