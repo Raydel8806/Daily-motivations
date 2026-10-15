@@ -20,6 +20,12 @@ class AppStrings {
   String get random =>
       _text('Frase aleatoria', 'Random quote', 'Citation aléatoire');
   String get languageLabel => _text('Idioma', 'Language', 'Langue');
+  String get deviceLanguage =>
+      _text('Idioma del teléfono', 'Device language', 'Langue du téléphone');
+  String get languageSaveError => _text(
+      'No se pudo guardar el idioma. Inténtalo de nuevo.',
+      'Could not save the language. Please try again.',
+      'Impossible d’enregistrer la langue. Veuillez réessayer.');
   String get author => _text('Autor', 'Author', 'Auteur');
   String get contact => _text('Contacto', 'Contact', 'Contact');
   String get version => _text('Versión', 'Version', 'Version');

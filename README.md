@@ -5,10 +5,16 @@ A Flutter app with a motivational quote for every day of the year.
 ## Languages
 
 The interface, calendar, dates, and all 366 quotes are available in Spanish,
-English, and French. The app starts in the device language and falls back to
-Spanish for unsupported languages. The language icon in the app bar lets users
-switch languages during a session while keeping the selected quote. A manual
-language selection resets when the app restarts.
+English, and French. By default, the app uses the first supported language in
+the device's preferred language list and falls back to English if none match.
+Regional variants such as Canadian French and Mexican Spanish use the
+corresponding supported language.
+
+The language icon in the app bar lets users switch languages while keeping the
+selected quote. Manual selections are stored locally and restored on restart.
+Choose **Device language** to clear the override and follow the device again.
+Automatic language detection does not save a manual override, so it can respond
+to subsequent changes in the device's language settings.
 
 Quote translations are bundled in `assets/quotes_en.json` and
 `assets/quotes_fr.json`. Reading and sharing quotes does not require a network
@@ -37,7 +43,8 @@ flutter run
 ```
 
 Tests verify coverage of all 366 dates in both translation catalogs, sharing
-text, language switching, and calendar localization.
+text, language switching, calendar localization, saved language restoration,
+automatic device selection, English fallback, and storage error recovery.
 
 `dart run tool/translate_quotes.dart` is a development importer that requires a
 network connection and queries an external translation service. It preserves

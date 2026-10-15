@@ -22,9 +22,11 @@ const List<String> monthsNames = [
 ];
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.onLanguageChanged})
+  const MyHomePage(
+      {Key? key, required this.onLanguageChanged, this.selectedLocale})
       : super(key: key);
-  final ValueChanged<Locale> onLanguageChanged;
+  final ValueChanged<Locale?> onLanguageChanged;
+  final Locale? selectedLocale;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -117,12 +119,18 @@ class _MyHomePageState extends State<MyHomePage> {
         PopupMenuButton<String>(
           tooltip: AppStrings.of(context).languageLabel,
           icon: const Icon(Icons.language),
-          initialValue: Localizations.localeOf(context).languageCode,
-          onSelected: (language) => widget.onLanguageChanged(Locale(language)),
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'es', child: Text('Español')),
-            PopupMenuItem(value: 'en', child: Text('English')),
-            PopupMenuItem(value: 'fr', child: Text('Français')),
+          initialValue: widget.selectedLocale?.languageCode ?? 'system',
+          onSelected: (language) => widget.onLanguageChanged(
+              language == 'system' ? null : Locale(language)),
+          itemBuilder: (_) => [
+            PopupMenuItem(
+              value: 'system',
+              child: Text(AppStrings.of(context).deviceLanguage),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(value: 'es', child: Text('Español')),
+            const PopupMenuItem(value: 'en', child: Text('English')),
+            const PopupMenuItem(value: 'fr', child: Text('Français')),
           ],
         ),
         PopupMenuButton(
