@@ -60,6 +60,7 @@ void main() {
     await store.load();
     await tester.pumpWidget(DailyMotivationsApp(favoritesStore: store));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('toggle_favorite')));
     await tester.tap(find.byKey(const ValueKey('toggle_favorite')));
     await tester.pumpAndSettle();
     expect(store.quotes.length, 1);
