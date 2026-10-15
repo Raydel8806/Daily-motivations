@@ -69,6 +69,18 @@ class AppStrings {
       'No se pudo configurar el recordatorio. Inténtalo de nuevo.',
       'Could not configure the reminder. Please try again.',
       'Impossible de configurer le rappel. Veuillez réessayer.');
+  String get readQuote =>
+      _text('Leer en voz alta', 'Read aloud', 'Lire à voix haute');
+  String get stopReading =>
+      _text('Detener lectura', 'Stop reading', 'Arrêter la lecture');
+  String get voiceUnavailable => _text(
+      'No hay una voz instalada para este idioma. Puedes añadirla en los ajustes de texto a voz del teléfono.',
+      'No installed voice is available for this language. You can add one in your phone’s text-to-speech settings.',
+      'Aucune voix installée n’est disponible pour cette langue. Vous pouvez en ajouter une dans les paramètres de synthèse vocale du téléphone.');
+  String get speechError => _text(
+      'No se pudo leer la frase. Inténtalo de nuevo.',
+      'Could not read the quote. Please try again.',
+      'Impossible de lire la citation. Veuillez réessayer.');
 
   String _text(String es, String en, String fr) => language == 'en'
       ? en

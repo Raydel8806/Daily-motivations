@@ -41,7 +41,13 @@ screen. Favorites are stored locally using stable calendar identifiers, so
 changing languages preserves the same saved quotes. The list survives app
 restarts and does not require a network connection.
 
-## Source Organization
+## Read Aloud
+
+Use the speaker below a quote to read the quote and its author in the selected
+language. Tap again to stop. Playback stops when changing quotes or languages,
+opening another screen, or leaving the app. Android requires an installed offline
+text-to-speech voice for the chosen language; if none is available, the app asks
+the user to install one through the phone's text-to-speech settings.
 
 ## Daily Reminders (Android)
 
@@ -90,6 +96,9 @@ lib/
       data/                      # Calendar catalog and offline translations
       presentation/              # Quote screen and its interactions
     settings/data/               # Local language preference storage
+    favorites/                   # Persistent saved quotes and their list
+    reminders/                   # Android reminder settings and native bridge
+    reading/data/                # Text-to-speech playback and voice selection
   shared/widgets/                # Reusable interface components
 test/features/                   # Tests grouped by feature
 ```

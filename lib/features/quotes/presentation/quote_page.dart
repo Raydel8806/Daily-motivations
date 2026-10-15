@@ -11,6 +11,7 @@ import '../../favorites/presentation/favorites_page.dart';
 import '../../reminders/data/daily_reminder_service.dart';
 import '../../reminders/presentation/reminder_settings_page.dart';
 import 'dart:async';
+import '../../reading/data/quote_speaker.dart';
 
 class QuotePage extends StatefulWidget {
   const QuotePage(
@@ -18,12 +19,14 @@ class QuotePage extends StatefulWidget {
       required this.onLanguageChanged,
       required this.favoritesStore,
       this.reminderService,
+      this.speaker,
       this.selectedLocale})
       : super(key: key);
   final ValueChanged<Locale?> onLanguageChanged;
   final Locale? selectedLocale;
   final FavoritesStore favoritesStore;
   final DailyReminderService? reminderService;
+  final QuoteSpeaker? speaker;
 
   @override
   State<QuotePage> createState() => _QuotePageState();
@@ -37,6 +40,39 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
   bool _savingFavorite = false;
   bool _showingToday = true;
   Timer? _midnightTimer;
+  late final QuoteSpeaker _speaker;
+  String? _speechLanguage;
+
+  Future<void> _stopReading() async {
+    try {
+      await _speaker.stop();
+    } catch (error) {
+      debugPrint('Could not stop speech: $error');
+    }
+  }
+
+  Future<void> _readQuote() async {
+    if (_speaker.isActive) {
+      await _stopReading();
+      return;
+    }
+    final language = Localizations.localeOf(context).languageCode;
+    try {
+      final outcome = await _speaker.read(
+          QuoteTranslations.shareText(_quote, language), language);
+      if (mounted && outcome == SpeechOutcome.unavailable) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.of(context).voiceUnavailable)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.of(context).speechError)),
+        );
+      }
+    }
+  }
 
   Future<void> _toggleFavorite() async {
     setState(() => _savingFavorite = true);
@@ -53,6 +89,8 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
   }
 
   Future<void> _openFavorites() async {
+    await _stopReading();
+    if (!mounted) return;
     final selected = await Navigator.push<Quote>(
         context,
         MaterialPageRoute(
@@ -69,6 +107,7 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     _quote = _catalog.forDate(DateTime.now());
+    _speaker = widget.speaker ?? QuoteSpeaker();
     WidgetsBinding.instance.addObserver(this);
     final opened = widget.reminderService?.openedDate.value;
     if (opened != null) {
@@ -87,6 +126,7 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
     _midnightTimer = Timer(next.difference(now), () {
       if (!mounted) return;
       if (_showingToday) {
+        _stopReading();
         setState(() => _quote = _catalog.forDate(DateTime.now()));
       }
       _scheduleDayRefresh();
@@ -94,9 +134,21 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final language = Localizations.localeOf(context).languageCode;
+    if (_speechLanguage != null && _speechLanguage != language) {
+      _stopReading();
+    }
+    _speechLanguage = language;
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) _stopReading();
     if (state == AppLifecycleState.resumed) {
       if (_showingToday) {
+        _stopReading();
         setState(() => _quote = _catalog.forDate(DateTime.now()));
       }
       _scheduleDayRefresh();
@@ -107,6 +159,7 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
     final date = widget.reminderService?.openedDate.value;
     if (date == null || !mounted) return;
     widget.reminderService?.openedDate.value = null;
+    _stopReading();
     Navigator.of(context).popUntil((route) => route.isFirst);
     setState(() {
       _quote = _catalog.forDate(date);
@@ -116,6 +169,11 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    if (widget.speaker == null) {
+      _speaker.dispose();
+    } else {
+      _stopReading();
+    }
     _midnightTimer?.cancel();
     widget.reminderService?.openedDate.removeListener(_handleNotificationOpen);
     WidgetsBinding.instance.removeObserver(this);
@@ -123,6 +181,7 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
   }
 
   void _getRandomQuote() {
+    _stopReading();
     setState(() {
       _quote = _catalog.randomQuote();
       _showingToday = false;
@@ -130,6 +189,7 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
   }
 
   void _setDatePickerVisible(bool visibilityDatePicker) {
+    _stopReading();
     setState(() {
       _datePickerVisible = visibilityDatePicker;
     });
@@ -186,6 +246,7 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
   }
 
   void _selectDate(DateTime value) {
+    _stopReading();
     setState(() {
       _datePickerVisible = false;
       _quote = _catalog.forDate(value);
@@ -227,6 +288,7 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
               PopupMenuItem(
                 onTap: () => Future<void>.delayed(Duration.zero, () {
                   if (!mounted) return;
+                  _stopReading();
                   Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -332,6 +394,25 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (_speaker.isSupported)
+                AnimatedBuilder(
+                  animation: _speaker,
+                  builder: (context, _) => IconButton(
+                    key: const ValueKey('read_quote'),
+                    tooltip: _speaker.isActive
+                        ? AppStrings.of(context).stopReading
+                        : AppStrings.of(context).readQuote,
+                    icon: _speaker.status == SpeechStatus.preparing
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : Icon(_speaker.isActive
+                            ? Icons.stop_circle_outlined
+                            : Icons.volume_up_outlined),
+                    onPressed: _readQuote,
+                  ),
+                ),
               AnimatedBuilder(
                 animation: widget.favoritesStore,
                 builder: (context, _) => IconButton(

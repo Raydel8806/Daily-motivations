@@ -5,6 +5,7 @@ import '../features/settings/data/language_preferences.dart';
 import '../features/quotes/presentation/quote_page.dart';
 import '../features/favorites/data/favorites_store.dart';
 import '../features/reminders/data/daily_reminder_service.dart';
+import '../features/reading/data/quote_speaker.dart';
 
 class DailyMotivationsApp extends StatefulWidget {
   const DailyMotivationsApp(
@@ -12,6 +13,7 @@ class DailyMotivationsApp extends StatefulWidget {
       this.initialLocale,
       this.onLanguageSaved,
       this.favoritesStore,
+      this.quoteSpeaker,
       this.reminderService})
       : super(key: key);
 
@@ -19,6 +21,7 @@ class DailyMotivationsApp extends StatefulWidget {
   final Future<void> Function(Locale?)? onLanguageSaved;
   final FavoritesStore? favoritesStore;
   final DailyReminderService? reminderService;
+  final QuoteSpeaker? quoteSpeaker;
 
   @override
   State<DailyMotivationsApp> createState() => _DailyMotivationsAppState();
@@ -93,6 +96,7 @@ class _DailyMotivationsAppState extends State<DailyMotivationsApp> {
         primarySwatch: Colors.green,
       ),
       home: QuotePage(
+        speaker: widget.quoteSpeaker,
         reminderService: widget.reminderService,
         favoritesStore: _favorites,
         selectedLocale: _locale,
