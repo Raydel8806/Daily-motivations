@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_strings.dart';
 
 class AboutApp extends StatelessWidget {
   const AboutApp({Key? key}) : super(key: key);
@@ -13,9 +14,9 @@ class AboutApp extends StatelessWidget {
         width: 100,
       ),
       const SizedBox(height: 10),
-      const Text('Version: 1.0.0'),
+      Text('${AppStrings.of(context).version}: 1.0.0'),
       const SizedBox(height: 10),
-      const Text('Autor: Raydel Raúl Viñolo Sosa'),
+      Text('${AppStrings.of(context).author}: Raydel Raúl Viñolo Sosa'),
     ]);
   }
 }
