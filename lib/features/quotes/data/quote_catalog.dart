@@ -1,13 +1,26 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
-import 'package:motivaciones_diarias/quote.dart';
+import '../models/quote.dart';
 
-class QuoteProvider {
-  List<Quote> listOfQuotes = [];
+class QuoteCatalog {
+  late final List<Quote> quotes;
+  static const _months = [
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre'
+  ];
 
-  QuoteProvider() {
-    listOfQuotes = List.of({
+  QuoteCatalog() {
+    quotes = List.unmodifiable(const [
       Quote(
           "Enero 1",
           "Estoy convencido de que por lo menos la mitad de lo que separa a los emprendedores exitosos de los que no lo son es mera perseverancia.",
@@ -1342,21 +1355,15 @@ class QuoteProvider {
           "Howard Schultz"),
       Quote("Febrero 29", "El mejor modo de predecir el futuro es inventarlo.",
           "Alan Kay")
-    });
+    ]);
   }
 
-  Quote getQuoteByDay(String day) {
-    if (kDebugMode) {
-      print(listOfQuotes
-          .elementAt(
-              listOfQuotes.indexWhere((element) => (element.date == day)))
-          .date);
-    }
-    return listOfQuotes
-        .elementAt(listOfQuotes.indexWhere((element) => (element.date == day)));
+  Quote forDate(DateTime date) {
+    final dayKey = '${_months[date.month - 1]} ${date.day}';
+    return quotes.firstWhere((quote) => quote.date == dayKey);
   }
 
-  Quote getQuoteRandom() {
-    return listOfQuotes.elementAt(Random().nextInt(listOfQuotes.length));
+  Quote randomQuote() {
+    return quotes.elementAt(Random().nextInt(quotes.length));
   }
 }

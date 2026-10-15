@@ -1,0 +1,67 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import '../core/localization/app_strings.dart';
+import '../features/settings/data/language_preferences.dart';
+import '../features/quotes/presentation/quote_page.dart';
+
+class DailyMotivationsApp extends StatefulWidget {
+  const DailyMotivationsApp(
+      {Key? key, this.initialLocale, this.onLanguageSaved})
+      : super(key: key);
+
+  final Locale? initialLocale;
+  final Future<void> Function(Locale?)? onLanguageSaved;
+
+  @override
+  State<DailyMotivationsApp> createState() => _DailyMotivationsAppState();
+}
+
+class _DailyMotivationsAppState extends State<DailyMotivationsApp> {
+  Locale? _locale;
+  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _locale = widget.initialLocale;
+  }
+
+  Future<void> _changeLanguage(Locale? locale) async {
+    setState(() => _locale = locale);
+    try {
+      await widget.onLanguageSaved?.call(locale);
+    } catch (error) {
+      debugPrint('Could not save the language preference: $error');
+      if (!mounted) return;
+      final strings = AppStrings(_locale?.languageCode ??
+          LanguagePreferences.resolveDeviceLanguage(
+                  WidgetsBinding.instance.platformDispatcher.locales,
+                  LanguagePreferences.supportedLocales)
+              .languageCode);
+      _messengerKey.currentState?.showSnackBar(
+        SnackBar(content: Text(strings.languageSaveError)),
+      );
+    }
+  }
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      onGenerateTitle: (context) => AppStrings.of(context).title,
+      locale: _locale,
+      supportedLocales: LanguagePreferences.supportedLocales,
+      localeListResolutionCallback: LanguagePreferences.resolveDeviceLanguage,
+      scaffoldMessengerKey: _messengerKey,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+      ),
+      home: QuotePage(
+        selectedLocale: _locale,
+        onLanguageChanged: _changeLanguage,
+      ),
+    );
+  }
+}

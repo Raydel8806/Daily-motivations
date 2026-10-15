@@ -29,11 +29,33 @@ and scope are described in `docs/linguistic_review.md`. This review is neither
 certification by a human translator nor historical verification of every quote
 and its attribution.
 
-`lib/app_strings.dart` contains the interface text. Catalogs use the original
-Spanish date as a stable identifier to preserve the link between each quote and
-its day, including February 29.
+`lib/core/localization/app_strings.dart` contains the interface text. Catalogs
+use the original Spanish date as a stable identifier to preserve the link
+between each quote and its day, including February 29.
 
-## Development
+## Project Structure
+
+```text
+lib/
+  main.dart                      # Startup and local preference loading
+  app/app.dart                   # App theme, locale, and root navigation
+  core/localization/             # Shared interface labels and date formatting
+  features/
+    quotes/
+      models/                    # Immutable quote data
+      data/                      # Calendar catalog and offline translations
+      presentation/              # Quote screen and its interactions
+    settings/data/               # Local language preference storage
+  shared/widgets/                # Reusable interface components
+test/features/                   # Tests grouped by feature
+```
+
+This small app uses feature folders and separates storage and catalog logic
+from interface code. Stateful widgets handle screen state. It does not require
+a dependency injection container or a state management framework. New features
+can add their own data and presentation files when needed.
+
+## Development Commands
 
 ```sh
 flutter pub get

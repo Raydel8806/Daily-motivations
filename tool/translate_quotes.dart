@@ -3,13 +3,14 @@ import 'dart:io';
 
 // Development-only importer. The application uses the resulting offline data.
 Future<void> main(List<String> arguments) async {
-  final source = File('lib/quote_provider.dart').readAsStringSync();
+  final source =
+      File('lib/features/quotes/data/quote_catalog.dart').readAsStringSync();
   final strings = RegExp(
       r'''\x27((?:\\.|[^\x27\\])*)\x27|"((?:\\.|[^"\\])*)"|,''',
       dotAll: true);
   final entries = <List<String>>[];
   for (final match
-      in RegExp(r'Quote\((.*?)\)', dotAll: true).allMatches(source)) {
+      in RegExp(r'\bQuote\((.*?)\)', dotAll: true).allMatches(source)) {
     final fields = <String>[''];
     for (final token in strings.allMatches(match.group(1)!)) {
       if (token.group(0) == ',') {

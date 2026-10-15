@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:motivaciones_diarias/language_preferences.dart';
-import 'package:motivaciones_diarias/main.dart';
-import 'package:motivaciones_diarias/quote_translations.dart';
+import 'package:motivaciones_diarias/features/settings/data/language_preferences.dart';
+import 'package:motivaciones_diarias/app/app.dart';
+import 'package:motivaciones_diarias/features/quotes/data/quote_translations.dart';
 
 class MemoryPreferencesState {
   Completer<void>? writeGate;
@@ -97,7 +97,7 @@ void main() {
       tester.binding.platformDispatcher.localesTestValue = [entry.key];
       addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
       await tester.runAsync(QuoteTranslations.load);
-      await tester.pumpWidget(const MyApp());
+      await tester.pumpWidget(const DailyMotivationsApp());
       await tester.pumpAndSettle();
       expect(find.text(entry.value), findsOneWidget);
     });
@@ -114,8 +114,8 @@ void main() {
     Future<void> launch() async {
       final preferences = LanguagePreferences(storage: storage);
       final locale = await preferences.load();
-      await tester.pumpWidget(
-          MyApp(initialLocale: locale, onLanguageSaved: preferences.save));
+      await tester.pumpWidget(DailyMotivationsApp(
+          initialLocale: locale, onLanguageSaved: preferences.save));
       await tester.pumpAndSettle();
     }
 
@@ -151,7 +151,8 @@ void main() {
     tester.binding.platformDispatcher.localesTestValue = const [Locale('es')];
     addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
     await tester.runAsync(QuoteTranslations.load);
-    await tester.pumpWidget(MyApp(onLanguageSaved: preferences.save));
+    await tester
+        .pumpWidget(DailyMotivationsApp(onLanguageSaved: preferences.save));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.language));
     await tester.pumpAndSettle();
