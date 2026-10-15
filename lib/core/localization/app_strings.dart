@@ -43,6 +43,32 @@ class AppStrings {
       'Could not save or load favorites. Please try again.',
       'Impossible d’enregistrer ou de charger les favoris. Veuillez réessayer.');
   String get retry => _text('Reintentar', 'Retry', 'Réessayer');
+  String get dailyReminder =>
+      _text('Recordatorio diario', 'Daily reminder', 'Rappel quotidien');
+  String get reminderDescription => _text(
+      'Recibe la frase del día en tu teléfono.',
+      'Receive the quote of the day on your phone.',
+      'Recevez la citation du jour sur votre téléphone.');
+  String get reminderTime =>
+      _text('Hora del recordatorio', 'Reminder time', 'Heure du rappel');
+  String get reminderTimingNote => _text(
+      'El recordatorio usa la hora local del teléfono. Android puede retrasarlo para ahorrar batería.',
+      'The reminder follows your phone’s local time. Android may delay it to save battery.',
+      'Le rappel suit l’heure locale de votre téléphone. Android peut le retarder pour économiser la batterie.');
+  String get testNotification => _text(
+      'Probar notificación', 'Test notification', 'Tester la notification');
+  String get systemNotificationSettings => _text(
+      'Ajustes de notificaciones del teléfono',
+      'Phone notification settings',
+      'Paramètres de notification du téléphone');
+  String get notificationPermissionDenied => _text(
+      'Las notificaciones están desactivadas. Puedes permitirlas en los ajustes del teléfono.',
+      'Notifications are disabled. You can allow them in your phone settings.',
+      'Les notifications sont désactivées. Vous pouvez les autoriser dans les paramètres du téléphone.');
+  String get reminderError => _text(
+      'No se pudo configurar el recordatorio. Inténtalo de nuevo.',
+      'Could not configure the reminder. Please try again.',
+      'Impossible de configurer le rappel. Veuillez réessayer.');
 
   String _text(String es, String en, String fr) => language == 'en'
       ? en

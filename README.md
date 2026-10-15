@@ -33,8 +33,6 @@ and its attribution.
 use the original Spanish date as a stable identifier to preserve the link
 between each quote and its day, including February 29.
 
-## Project Structure
-
 ## Favorites
 
 Use the heart below a quote to add or remove it from favorites. The heart in
@@ -44,6 +42,42 @@ changing languages preserves the same saved quotes. The list survives app
 restarts and does not require a network connection.
 
 ## Source Organization
+
+## Daily Reminders (Android)
+
+Open **Daily reminder** from the overflow menu. Notifications are off by default.
+Choose a local time, then enable the reminder and allow the Android notification
+permission. **Test notification** posts today's quote immediately without
+enabling the daily schedule. A shortcut opens Android's notification settings.
+
+The native Android receiver selects the current day's quote from an offline
+cache of all three catalogs. It uses one renewable alarm, so reminders continue
+without a server, an open Flutter screen, or a finite queue of future quotes.
+Opening a notification shows its quote on the main screen. The receiver
+reschedules after a reboot, app update, clock change, or timezone change and
+selects the appropriate language when delivering the notification.
+
+These are battery-friendly inexact reminders: Android can delay delivery beyond
+the chosen time. Force-stopping the app or device-specific background restrictions
+can prevent delivery until the app is reopened. The current reminder integration
+is Android-only; the option is hidden on other platforms.
+
+Android unit tests cover calendar boundaries, leap day, and daylight-saving
+changes. An instrumentation test verifies notification delivery directly from
+the receiver without starting the Flutter activity, duplicate suppression, and
+cancellation. Grant the test app's notification permission before running it:
+
+```sh
+adb shell pm grant com.campingstudio.motivaciones_diarias android.permission.POST_NOTIFICATIONS
+cd android
+./gradlew :app:testDebugUnitTest :app:connectedDebugAndroidTest
+```
+
+Use the same Java 21 runtime configured for Flutter when invoking Gradle directly.
+See [Android's alarm scheduling guidance](https://developer.android.com/develop/background-work/services/alarms)
+for the operating system's timing behavior.
+
+## Source Layout
 
 ```text
 lib/

@@ -4,15 +4,21 @@ import '../core/localization/app_strings.dart';
 import '../features/settings/data/language_preferences.dart';
 import '../features/quotes/presentation/quote_page.dart';
 import '../features/favorites/data/favorites_store.dart';
+import '../features/reminders/data/daily_reminder_service.dart';
 
 class DailyMotivationsApp extends StatefulWidget {
   const DailyMotivationsApp(
-      {Key? key, this.initialLocale, this.onLanguageSaved, this.favoritesStore})
+      {Key? key,
+      this.initialLocale,
+      this.onLanguageSaved,
+      this.favoritesStore,
+      this.reminderService})
       : super(key: key);
 
   final Locale? initialLocale;
   final Future<void> Function(Locale?)? onLanguageSaved;
   final FavoritesStore? favoritesStore;
+  final DailyReminderService? reminderService;
 
   @override
   State<DailyMotivationsApp> createState() => _DailyMotivationsAppState();
@@ -51,6 +57,24 @@ class _DailyMotivationsAppState extends State<DailyMotivationsApp> {
       _messengerKey.currentState?.showSnackBar(
         SnackBar(content: Text(strings.languageSaveError)),
       );
+      return;
+    }
+    try {
+      await widget.reminderService?.updateLanguage(locale?.languageCode);
+    } catch (error) {
+      debugPrint('Could not update the reminder language: $error');
+      if (mounted) {
+        _messengerKey.currentState?.showSnackBar(
+          SnackBar(
+              content: Text(AppStrings(_locale?.languageCode ??
+                      LanguagePreferences.resolveDeviceLanguage(
+                              WidgetsBinding
+                                  .instance.platformDispatcher.locales,
+                              LanguagePreferences.supportedLocales)
+                          .languageCode)
+                  .reminderError)),
+        );
+      }
     }
   }
 
@@ -69,6 +93,7 @@ class _DailyMotivationsAppState extends State<DailyMotivationsApp> {
         primarySwatch: Colors.green,
       ),
       home: QuotePage(
+        reminderService: widget.reminderService,
         favoritesStore: _favorites,
         selectedLocale: _locale,
         onLanguageChanged: _changeLanguage,

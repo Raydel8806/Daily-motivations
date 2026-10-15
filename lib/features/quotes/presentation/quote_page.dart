@@ -8,28 +8,35 @@ import '../../../shared/widgets/about_content.dart';
 import '../data/quote_translations.dart';
 import '../../favorites/data/favorites_store.dart';
 import '../../favorites/presentation/favorites_page.dart';
+import '../../reminders/data/daily_reminder_service.dart';
+import '../../reminders/presentation/reminder_settings_page.dart';
+import 'dart:async';
 
 class QuotePage extends StatefulWidget {
   const QuotePage(
       {Key? key,
       required this.onLanguageChanged,
       required this.favoritesStore,
+      this.reminderService,
       this.selectedLocale})
       : super(key: key);
   final ValueChanged<Locale?> onLanguageChanged;
   final Locale? selectedLocale;
   final FavoritesStore favoritesStore;
+  final DailyReminderService? reminderService;
 
   @override
   State<QuotePage> createState() => _QuotePageState();
 }
 
-class _QuotePageState extends State<QuotePage> {
+class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
   bool _datePickerVisible = false;
 
   final _catalog = QuoteCatalog();
   late Quote _quote;
   bool _savingFavorite = false;
+  bool _showingToday = true;
+  Timer? _midnightTimer;
 
   Future<void> _toggleFavorite() async {
     setState(() => _savingFavorite = true);
@@ -51,7 +58,10 @@ class _QuotePageState extends State<QuotePage> {
         MaterialPageRoute(
             builder: (_) => FavoritesPage(store: widget.favoritesStore)));
     if (selected != null && mounted) {
-      setState(() => _quote = selected);
+      setState(() {
+        _quote = selected;
+        _showingToday = false;
+      });
     }
   }
 
@@ -59,11 +69,63 @@ class _QuotePageState extends State<QuotePage> {
   void initState() {
     super.initState();
     _quote = _catalog.forDate(DateTime.now());
+    WidgetsBinding.instance.addObserver(this);
+    final opened = widget.reminderService?.openedDate.value;
+    if (opened != null) {
+      _quote = _catalog.forDate(opened);
+      _showingToday = false;
+      widget.reminderService?.openedDate.value = null;
+    }
+    widget.reminderService?.openedDate.addListener(_handleNotificationOpen);
+    _scheduleDayRefresh();
+  }
+
+  void _scheduleDayRefresh() {
+    _midnightTimer?.cancel();
+    final now = DateTime.now();
+    final next = DateTime(now.year, now.month, now.day + 1);
+    _midnightTimer = Timer(next.difference(now), () {
+      if (!mounted) return;
+      if (_showingToday) {
+        setState(() => _quote = _catalog.forDate(DateTime.now()));
+      }
+      _scheduleDayRefresh();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (_showingToday) {
+        setState(() => _quote = _catalog.forDate(DateTime.now()));
+      }
+      _scheduleDayRefresh();
+    }
+  }
+
+  void _handleNotificationOpen() {
+    final date = widget.reminderService?.openedDate.value;
+    if (date == null || !mounted) return;
+    widget.reminderService?.openedDate.value = null;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    setState(() {
+      _quote = _catalog.forDate(date);
+      _showingToday = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _midnightTimer?.cancel();
+    widget.reminderService?.openedDate.removeListener(_handleNotificationOpen);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   void _getRandomQuote() {
     setState(() {
       _quote = _catalog.randomQuote();
+      _showingToday = false;
     });
   }
 
@@ -127,6 +189,7 @@ class _QuotePageState extends State<QuotePage> {
     setState(() {
       _datePickerVisible = false;
       _quote = _catalog.forDate(value);
+      _showingToday = false;
     });
   }
 
@@ -160,6 +223,21 @@ class _QuotePageState extends State<QuotePage> {
           icon: const Icon(Icons.more_vert),
           onSelected: (value) {},
           itemBuilder: (BuildContext contex) => <PopupMenuEntry>[
+            if (widget.reminderService?.isSupported == true)
+              PopupMenuItem(
+                onTap: () => Future<void>.delayed(Duration.zero, () {
+                  if (!mounted) return;
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => ReminderSettingsPage(
+                              service: widget.reminderService!)));
+                }),
+                child: ListTile(
+                  leading: const Icon(Icons.notifications_outlined),
+                  title: Text(AppStrings.of(context).dailyReminder),
+                ),
+              ),
             PopupMenuItem(
               onTap: () {
                 _getRandomQuote();
