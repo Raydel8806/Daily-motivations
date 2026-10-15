@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:motivaciones_diarias/quote.dart';
 import 'package:motivaciones_diarias/quote_provider.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 
 const List<String> monthsNames = [
   'Enero',
@@ -179,7 +179,9 @@ class _MyHomePageState extends State<MyHomePage> {
     if (kDebugMode) {
       print(shareQuote);
     }
-    await Share.share(shareQuote);
+    await SharePlus.instance.share(
+      ShareParams(text: shareQuote),
+    );
   }
 
   void aboutInfo(BuildContext context) {
