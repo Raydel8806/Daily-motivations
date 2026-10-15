@@ -203,12 +203,13 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
         top: false,
         child: LayoutBuilder(builder: (context, constraints) {
           return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                   minHeight:
-                      (constraints.maxHeight - 56).clamp(0, double.infinity)),
-              child: Center(
+                      (constraints.maxHeight - 48).clamp(0, double.infinity)),
+              child: Align(
+                alignment: const Alignment(0, -0.3),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 600),
                   child: Column(
@@ -438,49 +439,52 @@ class _QuotePageState extends State<QuotePage> with WidgetsBindingObserver {
           ),
           Divider(color: colors.primary.withValues(alpha: 0.12)),
           const SizedBox(height: 8),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 16,
-            runSpacing: 8,
-            children: [
-              if (_speaker.isSupported)
+          Align(
+            alignment: Alignment.center,
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                if (_speaker.isSupported)
+                  AnimatedBuilder(
+                    animation: _speaker,
+                    builder: (context, _) => IconButton(
+                      key: const ValueKey('read_quote'),
+                      tooltip: _speaker.isActive
+                          ? AppStrings.of(context).stopReading
+                          : AppStrings.of(context).readQuote,
+                      icon: _speaker.status == SpeechStatus.preparing
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2))
+                          : Icon(_speaker.isActive
+                              ? Icons.stop_circle_outlined
+                              : Icons.volume_up_outlined),
+                      onPressed: _readQuote,
+                    ),
+                  ),
                 AnimatedBuilder(
-                  animation: _speaker,
+                  animation: widget.favoritesStore,
                   builder: (context, _) => IconButton(
-                    key: const ValueKey('read_quote'),
-                    tooltip: _speaker.isActive
-                        ? AppStrings.of(context).stopReading
-                        : AppStrings.of(context).readQuote,
-                    icon: _speaker.status == SpeechStatus.preparing
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2))
-                        : Icon(_speaker.isActive
-                            ? Icons.stop_circle_outlined
-                            : Icons.volume_up_outlined),
-                    onPressed: _readQuote,
+                    key: const ValueKey('toggle_favorite'),
+                    tooltip: widget.favoritesStore.contains(_quote)
+                        ? AppStrings.of(context).removeFavorite
+                        : AppStrings.of(context).addFavorite,
+                    icon: Icon(widget.favoritesStore.contains(_quote)
+                        ? Icons.favorite
+                        : Icons.favorite_border),
+                    onPressed: _savingFavorite ? null : _toggleFavorite,
                   ),
                 ),
-              AnimatedBuilder(
-                animation: widget.favoritesStore,
-                builder: (context, _) => IconButton(
-                  key: const ValueKey('toggle_favorite'),
-                  tooltip: widget.favoritesStore.contains(_quote)
-                      ? AppStrings.of(context).removeFavorite
-                      : AppStrings.of(context).addFavorite,
-                  icon: Icon(widget.favoritesStore.contains(_quote)
-                      ? Icons.favorite
-                      : Icons.favorite_border),
-                  onPressed: _savingFavorite ? null : _toggleFavorite,
+                IconButton(
+                  tooltip: AppStrings.of(context).share,
+                  icon: const Icon(Icons.ios_share_rounded),
+                  onPressed: _shareQuote,
                 ),
-              ),
-              IconButton(
-                tooltip: AppStrings.of(context).share,
-                icon: const Icon(Icons.ios_share_rounded),
-                onPressed: _shareQuote,
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
