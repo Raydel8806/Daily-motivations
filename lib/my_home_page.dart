@@ -1,11 +1,10 @@
-import 'dart:ui';
-
-import 'package:date_field/date_field.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:motivaciones_diarias/quote.dart';
 import 'package:motivaciones_diarias/quote_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'app_strings.dart';
+import 'quote_translations.dart';
 
 const List<String> monthsNames = [
   'Enero',
@@ -23,8 +22,9 @@ const List<String> monthsNames = [
 ];
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-  final String title;
+  const MyHomePage({Key? key, required this.onLanguageChanged})
+      : super(key: key);
+  final ValueChanged<Locale> onLanguageChanged;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -66,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ]),
       floatingActionButton: FloatingActionButton(
         onPressed: _getRandomQuote,
-        tooltip: 'Random',
+        tooltip: AppStrings.of(context).random,
         child: const Icon(Icons.account_balance_rounded),
       ),
       // This trailing comma makes auto-formatting nicer for build methods.
@@ -77,31 +77,17 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_visibilityDatePicker) {
       return Container(
         margin: const EdgeInsets.all(20),
-        child: DateTimeFormField(
-          decoration: const InputDecoration(
-            hintStyle: TextStyle(color: Colors.black45),
-            errorStyle: TextStyle(color: Colors.redAccent),
-            border: OutlineInputBorder(),
-            suffixIcon: Icon(Icons.event_note),
-            labelText: 'Frase del '
-                'día',
-          ),
-          mode: DateTimeFieldPickerMode.date,
-          autovalidateMode: AutovalidateMode.always,
-          onDateSelected: (DateTime value) {
-            if (kDebugMode) {
-              print(value);
-            }
-            seeQuoteByDate(value);
-          },
-          onSaved: (value) => {
-            setState(() {
-              _quote = QuoteProvider().getQuoteByDay(
-                monthsNames.elementAt(value!.month - 1) +
-                    ' ' +
-                    value.day.toString(),
-              );
-            })
+        child: OutlinedButton.icon(
+          icon: const Icon(Icons.event_note),
+          label: Text(AppStrings.of(context).dailyQuote),
+          onPressed: () async {
+            final date = await showDatePicker(
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(1900),
+              lastDate: DateTime(2100, 12, 31),
+            );
+            if (date != null && mounted) seeQuoteByDate(date);
           },
         ),
       );
@@ -109,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
       return Container(
           margin: const EdgeInsets.all(20),
           child: Text(
-            _quote.date,
+            AppStrings.of(context).date(_quote.date),
             style: const TextStyle(fontSize: 20),
           ));
     }
@@ -126,8 +112,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
-      title: Text(widget.title),
+      title: Text(AppStrings.of(context).title),
       actions: [
+        PopupMenuButton<String>(
+          tooltip: AppStrings.of(context).languageLabel,
+          icon: const Icon(Icons.language),
+          initialValue: Localizations.localeOf(context).languageCode,
+          onSelected: (language) => widget.onLanguageChanged(Locale(language)),
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: 'es', child: Text('Español')),
+            PopupMenuItem(value: 'en', child: Text('English')),
+            PopupMenuItem(value: 'fr', child: Text('Français')),
+          ],
+        ),
         PopupMenuButton(
           icon: const Icon(Icons.more_vert),
           onSelected: (value) {},
@@ -136,34 +133,34 @@ class _MyHomePageState extends State<MyHomePage> {
               onTap: () {
                 _getRandomQuote();
               },
-              child: const ListTile(
-                leading: Icon(Icons.account_balance_rounded),
-                title: Text('Nueva frase'),
+              child: ListTile(
+                leading: const Icon(Icons.account_balance_rounded),
+                title: Text(AppStrings.of(context).newQuote),
               ),
             ),
             PopupMenuItem(
               onTap: () async {
                 await shareQuote();
               },
-              child: const ListTile(
-                leading: Icon(Icons.share),
-                title: Text('Compartir frase'),
+              child: ListTile(
+                leading: const Icon(Icons.share),
+                title: Text(AppStrings.of(context).share),
               ),
             ),
             PopupMenuItem(
               onTap: () {
                 _setStateOfDateTime(true);
               },
-              child: const ListTile(
-                leading: Icon(Icons.search),
-                title: Text('Buscar por fecha'),
+              child: ListTile(
+                leading: const Icon(Icons.search),
+                title: Text(AppStrings.of(context).search),
               ),
             ),
             const PopupMenuDivider(),
             PopupMenuItem(
               child: ListTile(
                   leading: const Icon(Icons.info),
-                  title: const Text('Mas información'),
+                  title: Text(AppStrings.of(context).about),
                   onTap: () {
                     aboutInfo(context);
                   }),
@@ -175,7 +172,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> shareQuote() async {
-    final shareQuote = _quote.quote + '.\n      ' + _quote.author;
+    final language = Localizations.localeOf(context).languageCode;
+    final shareQuote = QuoteTranslations.shareText(_quote, language);
     if (kDebugMode) {
       print(shareQuote);
     }
@@ -198,10 +196,12 @@ class _MyHomePageState extends State<MyHomePage> {
               width: 100,
             ),
             const SizedBox(height: 10),
-            const Text('Version: 1.0.0'),
+            Text('${AppStrings.of(context).version}: 1.0.0'),
             const SizedBox(height: 10),
-            const Text('Autor: Ing. Raydel Raúl Viñolo Sosa'),
-            const SelectableText('Contacto: raydel8806dev@gmail.com'),
+            Text(
+                '${AppStrings.of(context).author}: Ing. Raydel Raúl Viñolo Sosa'),
+            SelectableText(
+                '${AppStrings.of(context).contact}: raydel8806dev@gmail.com'),
           ])
         ],
       ),
@@ -215,7 +215,8 @@ class _MyHomePageState extends State<MyHomePage> {
         children: <Widget>[
           buildDateTimePiker(),
           SelectableText(
-            _quote.quote + '.',
+            QuoteTranslations.displayText(
+                _quote, Localizations.localeOf(context).languageCode),
             style: const TextStyle(
               fontStyle: FontStyle.italic,
               fontSize: 24,
@@ -227,7 +228,8 @@ class _MyHomePageState extends State<MyHomePage> {
             alignment: AlignmentGeometry.lerp(
                 Alignment.bottomCenter, Alignment.bottomRight, 1),
             child: Text(
-              _quote.author,
+              QuoteTranslations.author(
+                  _quote, Localizations.localeOf(context).languageCode),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
@@ -235,7 +237,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           ElevatedButton(
-            child: const Icon(Icons.share_sharp, semanticLabel: 'Compartir'),
+            child: Icon(Icons.share_sharp,
+                semanticLabel: AppStrings.of(context).share),
             onPressed: () async {
               await shareQuote();
             },
