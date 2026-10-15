@@ -4,6 +4,8 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.test.platform.app.InstrumentationRegistry
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -16,6 +18,13 @@ class DailyQuoteReceiverTest {
         val prefs = context.getSharedPreferences("daily_quote_notifications", Context.MODE_PRIVATE)
         val previous = prefs.all.toMap()
         val manager = context.getSystemService(NotificationManager::class.java)
+        val permission = "android.permission.POST_NOTIFICATIONS"
+        val grantNeeded = Build.VERSION.SDK_INT >= 33 &&
+            context.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED
+        if (grantNeeded) {
+            InstrumentationRegistry.getInstrumentation().uiAutomation
+                .grantRuntimePermission(context.packageName, permission)
+        }
         try {
             prefs.edit().clear().commit()
             val quoteKey = ReminderSchedule.quoteKey(Calendar.getInstance())
